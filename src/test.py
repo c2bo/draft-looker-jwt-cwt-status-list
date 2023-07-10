@@ -1,10 +1,11 @@
 from status_list import StatusList
-from status_jwt import StatusListJWT
+from status_token import StatusListToken
 from datetime import datetime, timedelta
 import util
 
 # demo key, constant timestamp
 key = util.EXAMPLE_KEY
+key_cwk = util.EXAMPLE_KEY_CWK
 iat = datetime.utcfromtimestamp(1686920170)
 gzip_time = iat.timestamp()
 
@@ -51,7 +52,7 @@ print(hex(test.list[0]), hex(test.list[1]), hex(test.list[2]))
 encoded = test.encode(mtime=gzip_time)
 print(encoded)
 
-jwt = StatusListJWT(
+token = StatusListToken(
     issuer="https://example.com",
     subject="https://example.com/statuslists/1",
     list=test,
@@ -59,7 +60,7 @@ jwt = StatusListJWT(
     bits=2,
 )
 exp = iat + timedelta(7)
-status_jwt = jwt.buildJWT(
+status_jwt = token.buildJWT(
     exp=exp,
     iat=iat,
     optional_claims={"custom": "value"},
@@ -72,9 +73,22 @@ print("-----------")
 print(util.formatToken(status_jwt, key))
 print("-----------")
 
-status_jwt = jwt.buildJWT(iat=iat, exp=exp, mtime=gzip_time)
+status_jwt = token.buildJWT(iat=iat, exp=exp, mtime=gzip_time)
 print(status_jwt)
 print("-----------")
 print(util.formatToken(status_jwt, key))
-decoded_list = StatusListJWT.fromJWT(status_jwt, key)
+decoded_list = StatusListToken.fromJWT(status_jwt, key, check_claims=False)
 print(decoded_list.list)
+
+
+# CWT
+token._key = key_cwk
+status_cwt = token.buildCWT(
+    exp=exp,
+    iat=iat,
+    mtime=gzip_time,
+)
+print(status_cwt.hex())
+token2 = StatusListToken.fromCWT(status_cwt, key_cwk)
+print(token.list.list)
+print(token2.list.list)

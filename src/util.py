@@ -1,4 +1,5 @@
 from jwcrypto import jwk, jwt
+from cwt import COSEKey
 import json
 
 example = {
@@ -11,10 +12,11 @@ example = {
     "kid": "12",
 }
 EXAMPLE_KEY = jwk.JWK(**example)
+EXAMPLE_KEY_CWK = COSEKey.from_jwk(example)
 
 
 def formatToken(input: str, key: jwk.JWK) -> str:
-    token = jwt.JWT(jwt=input, key=key, expected_type="JWS")
+    token = jwt.JWT(jwt=input, key=key, expected_type="JWS", check_claims=False)
     header = printJson(token.header)
     claims = printJson(token.claims)
     return f"""{header}
